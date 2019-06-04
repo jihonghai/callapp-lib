@@ -485,160 +485,6 @@
 	  };
 	}
 
-	// most Object methods by ES6 should accept primitives
-
-
-
-	var _objectSap = function (KEY, exec) {
-	  var fn = (_core.Object || {})[KEY] || Object[KEY];
-	  var exp = {};
-	  exp[KEY] = exec(fn);
-	  _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
-	};
-
-	// 19.1.2.14 Object.keys(O)
-
-
-
-	_objectSap('keys', function () {
-	  return function keys(it) {
-	    return _objectKeys(_toObject(it));
-	  };
-	});
-
-	var keys = _core.Object.keys;
-
-	var keys$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": keys, __esModule: true };
-	});
-
-	var _Object$keys = unwrapExports(keys$1);
-
-	/**
-	 * 搭建基本的 url scheme
-	 * @param {object} config - 参数项
-	 * @param {object} options - callapp-lib 基础配置
-	 * @returns {string} url scheme
-	 * @memberof CallApp
-	 */
-	function buildScheme(config, options) {
-	  var path = config.path,
-	      param = config.param;
-	  var customBuildScheme = options.buildScheme;
-
-
-	  if (typeof customBuildScheme !== 'undefined') {
-	    return customBuildScheme(config, options);
-	  }
-
-	  // callapp-lib 2.0.0 版本移除 protocol 属性，添加 scheme 属性，详细用法见 README.md
-	  var _options$scheme = options.scheme,
-	      host = _options$scheme.host,
-	      port = _options$scheme.port,
-	      protocol = _options$scheme.protocol;
-
-	  var portPart = port ? ':' + port : '';
-	  var hostPort = host ? '' + host + portPart + '/' : '';
-	  var query = typeof param !== 'undefined' ? _Object$keys(param).map(function (key) {
-	    return key + '=' + param[key];
-	  }).join('&') : '';
-	  var urlQuery = query ? '?' + query : '';
-
-	  return protocol + '://' + hostPort + path + urlQuery;
-	}
-
-	/**
-	 * 生成业务需要的 url scheme（区分是否是外链）
-	 * @param {object} config - 参数项
-	 * @param {object} options - callapp-lib 基础配置
-	 * @returns {string} url scheme
-	 * @memberof CallApp
-	 */
-	function generateScheme(config, options) {
-	  var outChain = options.outChain;
-
-	  var uri = buildScheme(config, options);
-
-	  if (typeof outChain !== 'undefined' && outChain) {
-	    var protocol = outChain.protocol,
-	        path = outChain.path,
-	        key = outChain.key;
-
-	    uri = protocol + '://' + path + '?' + key + '=' + encodeURIComponent(uri);
-	  }
-
-	  return uri;
-	}
-
-	/**
-	 * 生成 android intent
-	 * @param {object} config - 唤端参数项
-	 * @param {object} options - callapp-lib 基础配置
-	 * @returns {string} intent
-	 * @memberof CallApp
-	 */
-	function generateIntent(config, options) {
-	  var outChain = options.outChain;
-	  var intent = options.intent,
-	      fallback = options.fallback;
-
-	  var intentParam = _Object$keys(intent).map(function (key) {
-	    return key + '=' + intent[key] + ';';
-	  }).join('');
-	  var intentTail = '#Intent;' + intentParam + 'S.browser_fallback_url=' + encodeURIComponent(fallback) + ';end;';
-	  var urlPath = buildScheme(config, options);
-
-	  if (typeof outChain !== 'undefined' && outChain) {
-	    var _options$outChain = options.outChain,
-	        path = _options$outChain.path,
-	        key = _options$outChain.key;
-
-	    return 'intent://' + path + '?' + key + '=' + encodeURIComponent(urlPath) + intentTail;
-	  }
-
-	  urlPath = urlPath.slice(urlPath.indexOf('//') + 2);
-
-	  return 'intent://' + urlPath + intentTail;
-	}
-
-	/**
-	 * 生成 universalLink
-	 * @param {object} config - 唤端参数项
-	 * @param {object} options - callapp-lib 基础配置
-	 * @returns {string} universalLink
-	 * @memberof CallApp
-	 */
-	function generateUniversalLink(config, options) {
-	  var universal = options.universal;
-
-	  if (!universal) return '';
-
-	  var host = universal.host,
-	      pathKey = universal.pathKey;
-	  var path = config.path,
-	      param = config.param;
-
-	  var query = typeof param !== 'undefined' ? _Object$keys(param).map(function (key) {
-	    return key + '=' + param[key];
-	  }).join('&') : '';
-	  var urlQuery = query ? '&' + query : '';
-
-	  return 'https://' + host + '?' + pathKey + '=' + path + urlQuery;
-	}
-
-	/**
-	 * 生成 应用宝链接
-	 * @param {object} config - 唤端参数项
-	 * @param {object} options - callapp-lib 基础配置
-	 * @returns {string} 应用宝链接
-	 * @memberof CallApp
-	 */
-	function generateYingYongBao(config, options) {
-	  var url = generateScheme(config, options);
-	  // 支持 AppLink
-	  return options.yingyongbao + '&android_schema=' + encodeURIComponent(url);
-	}
-
 	var iframe = null;
 
 	/**
@@ -756,83 +602,50 @@
 	  function CallApp(options) {
 	    _classCallCheck(this, CallApp);
 
-	    var defaultOptions = { timeout: 2000 };
+	    var defaultOptions = {
+	      timeout: 2000,
+	      callback: function callback() {}
+	    };
 	    this.options = _Object$assign(defaultOptions, options);
 	  }
 
-	  /**
-	   * 注册为方法
-	   * generateScheme | generateIntent | generateUniversalLink | generateYingYongBao | checkOpen
-	   */
-
-
 	  _createClass(CallApp, [{
-	    key: 'generateScheme',
-	    value: function generateScheme$$1(config) {
-	      return generateScheme(config, this.options);
-	    }
-	  }, {
-	    key: 'generateIntent',
-	    value: function generateIntent$$1(config) {
-	      return generateIntent(config, this.options);
-	    }
-	  }, {
-	    key: 'generateUniversalLink',
-	    value: function generateUniversalLink$$1(config) {
-	      return generateUniversalLink(config, this.options);
-	    }
-	  }, {
-	    key: 'generateYingYongBao',
-	    value: function generateYingYongBao$$1(config) {
-	      return generateYingYongBao(config, this.options);
-	    }
-	  }, {
 	    key: 'checkOpen',
-	    value: function checkOpen$$1(cb) {
-	      return checkOpen(cb, this.options.timeout);
-	    }
-
-	    /**
-	     * 唤端失败跳转 app store
-	     * @memberof CallApp
-	     */
-
-	  }, {
-	    key: 'fallToAppStore',
-	    value: function fallToAppStore() {
+	    value: function checkOpen$$1(callback) {
 	      var _this = this;
 
-	      this.checkOpen(function () {
-	        evokeByLocation(_this.options.appstore);
-	      });
-	    }
-
-	    /**
-	     * 唤端失败跳转通用(下载)页
-	     * @memberof CallApp
-	     */
-
-	  }, {
-	    key: 'fallToFbUrl',
-	    value: function fallToFbUrl() {
-	      var _this2 = this;
-
-	      this.checkOpen(function () {
-	        evokeByLocation(_this2.options.fallback);
-	      });
-	    }
-
-	    /**
-	     * 唤端失败调用自定义回调函数
-	     * @memberof CallApp
-	     */
-
-	  }, {
-	    key: 'fallToCustomCb',
-	    value: function fallToCustomCb(callback) {
-	      this.checkOpen(function () {
+	      return checkOpen(function () {
+	        var scheme = _this.getScheme();
+	        if (/^(http|https)/i.test(scheme)) {
+	          evokeByLocation(scheme);
+	        } else {
+	          // TODO
+	          evokeByLocation(scheme);
+	        }
 	        callback();
-	      });
+	      }, this.options.timeout);
+	    }
+
+	    /**
+	     * 根据操作系统获取对应的scheme
+	     */
+
+	  }, {
+	    key: 'getScheme',
+	    value: function getScheme() {
+	      var options = this.options;
+
+	      var browser = getBrowser();
+	      var scheme = null;
+	      if (browser.isAndroid) {
+	        scheme = options.android;
+	      }
+
+	      if (browser.isIos) {
+	        scheme = options.iOS;
+	      }
+
+	      return scheme;
 	    }
 
 	    /**
@@ -843,20 +656,17 @@
 	     */
 
 	  }, {
-	    key: 'open',
-	    value: function open(config) {
+	    key: 'call',
+	    value: function call(config) {
 	      var browser = getBrowser();
 
 	      var _options = this.options,
-	          universal = _options.universal,
 	          appstore = _options.appstore,
 	          logFunc = _options.logFunc,
-	          intent = _options.intent;
-	      var callback = config.callback;
+	          callback = _options.callback;
 
-	      var supportUniversal = typeof universal !== 'undefined';
+
 	      var schemeURL = this.generateScheme(config);
-	      var checkOpenFall = null;
 
 	      if (typeof logFunc !== 'undefined') {
 	        logFunc();
@@ -869,37 +679,22 @@
 	          evokeByLocation(appstore);
 	        } else if (getIOSVersion() < 9) {
 	          evokeByIFrame(schemeURL);
-	          checkOpenFall = this.fallToAppStore;
-	        } else if (!supportUniversal) {
-	          evokeByLocation(schemeURL);
-	          checkOpenFall = this.fallToAppStore;
-	        } else {
-	          evokeByLocation(this.generateUniversalLink(config));
 	        }
+	        // evokeByLocation(this.generateUniversalLink(config));
+
 	        // Android
 	      } else if (browser.isWechat) {
 	        evokeByLocation(this.generateYingYongBao(config));
 	      } else if (browser.isOriginalChrome) {
-	        if (typeof intent !== 'undefined') {
-	          evokeByLocation(this.generateIntent(config));
-	        } else {
+	        if (typeof intent !== 'undefined') ; else {
 	          // scheme 在 andriod chrome 25+ 版本上必须手势触发
 	          evokeByTagA(schemeURL);
-	          checkOpenFall = this.fallToFbUrl;
 	        }
 	      } else {
 	        evokeByIFrame(schemeURL);
-	        checkOpenFall = this.fallToFbUrl;
 	      }
 
-	      if (typeof callback !== 'undefined') {
-	        this.fallToCustomCb(callback);
-	        return;
-	      }
-
-	      if (!checkOpenFall) return;
-
-	      checkOpenFall.call(this);
+	      this.checkOpen(callback);
 	    }
 	  }]);
 
