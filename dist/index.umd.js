@@ -1,3 +1,4 @@
+// https://github.com/jihonghai/callapp-lib
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
@@ -607,6 +608,7 @@
 	      callback: function callback() {}
 	    };
 	    this.options = _Object$assign(defaultOptions, options);
+	    this.browser = getBrowser();
 	  }
 
 	  _createClass(CallApp, [{
@@ -614,13 +616,30 @@
 	    value: function checkOpen$$1(callback) {
 	      var _this = this;
 
+	      var browser = this.browser,
+	          options = this.options;
+
 	      return checkOpen(function () {
 	        var scheme = _this.getScheme();
+
+	        // 调起地址为非scheme直接跳转
 	        if (/^(http|https)/i.test(scheme)) {
 	          evokeByLocation(scheme);
+	        } else if (browser.isIos) {
+	          // 跳转到下载地址
+	          // 近期ios版本qq禁止了scheme和universalLink唤起app，安卓不受影响 - 18年12月23日
+	          // ios qq浏览器禁止了scheme和universalLink - 2019年5月1日
+	          // if (browser.isWechat || browser.isQQ || browser.isQQBrowser) {
+	          if (browser.isWechat || browser.isQQ) {
+	            evokeByLocation(options.tencentUrl);
+	          } else {
+	            evokeByLocation(options.iOSUrl);
+	          }
+	        } else if (browser.isWechat || browser.isQQ) {
+	          // Android
+	          evokeByLocation(options.tencentUrl);
 	        } else {
-	          // TODO
-	          evokeByLocation(scheme);
+	          evokeByLocation(options.androidUrl);
 	        }
 	        callback();
 	      }, this.options.timeout);
@@ -633,9 +652,9 @@
 	  }, {
 	    key: 'getScheme',
 	    value: function getScheme() {
-	      var options = this.options;
+	      var options = this.options,
+	          browser = this.browser;
 
-	      var browser = getBrowser();
 	      var scheme = null;
 	      if (browser.isAndroid) {
 	        scheme = options.android;
@@ -651,50 +670,53 @@
 	    /**
 	     * 唤起客户端
 	     * 根据不同 browser 执行不同唤端策略
-	     * @param {object} config - 唤端参数项
 	     * @memberof CallApp
 	     */
 
 	  }, {
 	    key: 'call',
-	    value: function call(config) {
-	      var browser = getBrowser();
-
+	    value: function call() {
+	      var browser = this.browser;
 	      var _options = this.options,
-	          appstore = _options.appstore,
+	          tencentUrl = _options.tencentUrl,
 	          logFunc = _options.logFunc,
-	          callback = _options.callback;
+	          callback = _options.callback,
+	          link = _options.link;
 
-
-	      var schemeURL = this.generateScheme(config);
 
 	      if (typeof logFunc !== 'undefined') {
 	        logFunc();
 	      }
 
-	      if (browser.isIos) {
-	        // 近期ios版本qq禁止了scheme和universalLink唤起app，安卓不受影响 - 18年12月23日
-	        // ios qq浏览器禁止了scheme和universalLink - 2019年5月1日
-	        if (browser.isWechat || browser.isQQ || browser.isQQBrowser) {
-	          evokeByLocation(appstore);
-	        } else if (getIOSVersion() < 9) {
-	          evokeByIFrame(schemeURL);
-	        }
-	        // evokeByLocation(this.generateUniversalLink(config));
-
-	        // Android
-	      } else if (browser.isWechat) {
-	        evokeByLocation(this.generateYingYongBao(config));
-	      } else if (browser.isOriginalChrome) {
-	        if (typeof intent !== 'undefined') ; else {
+	      // 存在超链接，直接进行跳转
+	      if (link) {
+	        evokeByLocation(link);
+	      } else {
+	        var schemeURL = this.getScheme();
+	        if (browser.isIos) {
+	          // 近期ios版本qq禁止了scheme和universalLink唤起app，安卓不受影响 - 18年12月23日
+	          // ios qq浏览器禁止了scheme和universalLink - 2019年5月1日
+	          // if (browser.isWechat || browser.isQQ || browser.isQQBrowser) {
+	          if (browser.isWechat || browser.isQQ) {
+	            evokeByLocation(schemeURL);
+	          } else if (getIOSVersion() < 9) {
+	            evokeByIFrame(schemeURL);
+	          } else {
+	            evokeByTagA(schemeURL);
+	          }
+	          // Android
+	        } else if (browser.isWechat) {
+	          evokeByLocation(tencentUrl);
+	        } else if (browser.isOriginalChrome) {
 	          // scheme 在 andriod chrome 25+ 版本上必须手势触发
 	          evokeByTagA(schemeURL);
+	        } else {
+	          evokeByIFrame(schemeURL);
 	        }
-	      } else {
-	        evokeByIFrame(schemeURL);
-	      }
 
-	      this.checkOpen(callback);
+	        this.checkOpen(callback);
+	      }
+	      return this;
 	    }
 	  }]);
 

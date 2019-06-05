@@ -33,6 +33,7 @@ export default [{
     format: 'umd',
     name: 'CallApp',
     file: 'dist/index.umd.js',
+    banner: '// https://github.com/jihonghai/callapp-lib',
   },
   plugins: [
     resolve({

@@ -27,51 +27,20 @@
   </style>
 </head>
 <body>
-  <div id='call-button'>点击唤起电流App个人页</div>
+  <div id='call-button'>点击唤起App</div>
 
-  <script src='https://unpkg.com/callapp-lib@2.1.7/dist/index.umd.js'></script>
+  <script src='../dist/index.umd.min.js'></script>
   <script>
-    const option = {
-      scheme: {
-        protocol: 'ykshortvideo',
-      },
-      outChain: {
-        protocol: 'ykshortvideo',
-        path: 'temporary',
-        key: 'url',
-      },
-      intent: {
-        package: 'com.youku.shortvideo',
-        scheme: 'ykshortvideo',
-      },
-      universal: {
-        host: 'flash-link.youku.com',
-        pathKey: 'action',
-      },
-      appstore: 'https://itunes.apple.com/cn/app/id1383186862',
-      yingyongbao: '//a.app.qq.com/o/simple.jsp?pkgname=com.youku.shortvideo',
-      fallback: 'https://dianliu.youku.com/service/download',
-      timeout: 2000,
-    };
-    const lib = new CallApp(option);
     const callButton = document.querySelector('#call-button');
-
     callButton.addEventListener('click', () => {
-      lib.open({
-        path: 'profile',
-      });
+      new CallApp({
+        iOS: 'miguvideo://miguvideo',
+        android: 'miguvideo://miguvideo',
+        iOSUrl: 'https://itunes.apple.com/cn/app/id787130974',
+        androidUrl: 'http://g.10086.cn/hao/0vt0l',
+        tencentUrl: 'https://sj.qq.com/myapp/detail.htm?apkName=cmccwm.mobilemusic',
+      }).call();
     });
-
-    // 因为业务需要，我们需要添加 outChain 属性
-    // 但是这样生成出来的 scheme 稍显复杂，所以下面的 log 其实是移除了 outChain 属性的
-    // outChain 很少有同学会使用到，所以更方便大家理解
-
-    // ykshortvideo://profile
-    console.log(lib.generateScheme({path: 'profile'})); 
-    // intent://profile#Intent;package=com.youku.shortvideo;scheme=ykshortvideo;S.browser_fallback_url=https%3A%2F%2Fdianliu.youku.com%2Fservice%2Fdownload;end;
-    console.log(lib.generateIntent({path: 'profile'})); 
-    // https://flash-link.youku.com?action=profile
-    console.log(lib.generateUniversalLink({path: 'profile'}));
   </script>
 </body>
 </html>
