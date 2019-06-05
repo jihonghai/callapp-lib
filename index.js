@@ -70,6 +70,21 @@ class CallApp {
   }
 
   /**
+   * 唤醒APP
+   */
+  isCallingApp() {
+    const {
+      iOS,
+      android,
+      iOSUrl,
+      androidUrl,
+      tencentUrl,
+    } = this.options;
+
+    return !!(iOS && android && iOSUrl && androidUrl && tencentUrl);
+  }
+
+  /**
    * 唤起客户端
    * 根据不同 browser 执行不同唤端策略
    * @memberof CallApp
@@ -90,7 +105,7 @@ class CallApp {
     // 存在超链接，直接进行跳转
     if (link) {
       evokeByLocation(link);
-    } else {
+    } else if (this.isCallingApp()) {
       const schemeURL = this.getScheme();
       if (browser.isIos) {
         // 近期ios版本qq禁止了scheme和universalLink唤起app，安卓不受影响 - 18年12月23日

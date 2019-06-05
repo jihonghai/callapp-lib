@@ -2,7 +2,7 @@
   "name": "callapp-lib",
   "version": "2.1.7",
   "description": "call native webview from webpage",
-  "main": "dist/index.umd.js",
+  "main": "dist/callapp.umd.js",
   "scripts": {
     "start": "rollup -c",
     "build": "npm run start && git add ."

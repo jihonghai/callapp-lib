@@ -668,6 +668,24 @@
 	    }
 
 	    /**
+	     * 唤醒APP
+	     */
+
+	  }, {
+	    key: 'isCallingApp',
+	    value: function isCallingApp() {
+	      var _options = this.options,
+	          iOS = _options.iOS,
+	          android = _options.android,
+	          iOSUrl = _options.iOSUrl,
+	          androidUrl = _options.androidUrl,
+	          tencentUrl = _options.tencentUrl;
+
+
+	      return !!(iOS && android && iOSUrl && androidUrl && tencentUrl);
+	    }
+
+	    /**
 	     * 唤起客户端
 	     * 根据不同 browser 执行不同唤端策略
 	     * @memberof CallApp
@@ -677,11 +695,11 @@
 	    key: 'call',
 	    value: function call() {
 	      var browser = this.browser;
-	      var _options = this.options,
-	          tencentUrl = _options.tencentUrl,
-	          logFunc = _options.logFunc,
-	          callback = _options.callback,
-	          link = _options.link;
+	      var _options2 = this.options,
+	          tencentUrl = _options2.tencentUrl,
+	          logFunc = _options2.logFunc,
+	          callback = _options2.callback,
+	          link = _options2.link;
 
 
 	      if (typeof logFunc !== 'undefined') {
@@ -691,7 +709,7 @@
 	      // 存在超链接，直接进行跳转
 	      if (link) {
 	        evokeByLocation(link);
-	      } else {
+	      } else if (this.isCallingApp()) {
 	        var schemeURL = this.getScheme();
 	        if (browser.isIos) {
 	          // 近期ios版本qq禁止了scheme和universalLink唤起app，安卓不受影响 - 18年12月23日
