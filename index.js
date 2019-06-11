@@ -1,7 +1,7 @@
 /**
  * @author suanmei <mr_suanmei@163.com>
  */
-import { getIOSVersion, getBrowser } from './sources/browser';
+import { getBrowser } from './sources/browser';
 import {
   evokeByLocation,
   evokeByIFrame,
@@ -113,8 +113,6 @@ class CallApp {
         // if (browser.isWechat || browser.isQQ || browser.isQQBrowser) {
         if (browser.isWechat || browser.isQQ) {
           evokeByLocation(schemeURL);
-        } else if ((getIOSVersion() < 9)) {
-          evokeByIFrame(schemeURL);
         } else {
           evokeByTagA(schemeURL);
         }

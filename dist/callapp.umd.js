@@ -450,10 +450,6 @@
 	/**
 	 * 获取 ios 大版本号
 	 */
-	function getIOSVersion() {
-	  var verion = navigator.appVersion.match(/OS (\d+)_(\d+)_?(\d+)?/);
-	  return parseInt(verion[1], 10);
-	}
 
 	/**
 	 * 获取 browser 信息
@@ -717,8 +713,6 @@
 	          // if (browser.isWechat || browser.isQQ || browser.isQQBrowser) {
 	          if (browser.isWechat || browser.isQQ) {
 	            evokeByLocation(schemeURL);
-	          } else if (getIOSVersion() < 9) {
-	            evokeByIFrame(schemeURL);
 	          } else {
 	            evokeByTagA(schemeURL);
 	          }
