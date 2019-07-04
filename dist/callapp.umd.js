@@ -566,33 +566,43 @@
 
 	/**
 	 * 检测是否唤端成功
-	 * @param {function} cb - 唤端失败回调函数
+	 * @param {function} success - 唤端成功回调函数
+	 * @param {function} fail - 唤端失败回调函数
+	 * @param {number} timeout - 延时时间。单位：毫秒
 	 */
-	function checkOpen(cb, timeout) {
+	function checkOpen(success, fail, timeout) {
 	  var visibilityChangeProperty = getVisibilityChangeProperty();
+	  var isFail = false;
 	  var timer = setTimeout(function () {
-	    var hidden = isPageHidden();
-	    if (!hidden) {
-	      cb();
+	    var isHidden = isPageHidden();
+	    if (!isHidden) {
+	      isFail = true;
+	      fail();
 	    }
 	  }, timeout);
 
-	  if (visibilityChangeProperty) {
-	    document.addEventListener(visibilityChangeProperty, function () {
+	  function pagehideCallback() {
+	    var isHidden = isPageHidden();
+	    if (!isFail) {
+	      isFail = false;
 	      clearTimeout(timer);
-	    });
+	      if (isHidden) {
+	        success();
+	      }
+	    }
+	  }
 
+	  if (visibilityChangeProperty) {
+	    document.addEventListener(visibilityChangeProperty, pagehideCallback);
 	    return;
 	  }
 
-	  window.addEventListener('pagehide', function () {
-	    clearTimeout(timer);
-	  });
+	  window.addEventListener('pagehide', pagehideCallback);
 	}
 
 	var CallApp = function () {
 	  /**
-	   *Creates an instance of CallApp.
+	   * Creates an instance of CallApp.
 	   * @param {object=} options - 配置项
 	   * @memberof CallApp
 	   */
@@ -600,44 +610,60 @@
 	    _classCallCheck(this, CallApp);
 
 	    var defaultOptions = {
-	      timeout: 2000,
+	      timeout: 5000,
 	      callback: function callback() {}
 	    };
 	    this.options = _Object$assign(defaultOptions, options);
 	    this.browser = getBrowser();
 	  }
 
+	  /**
+	   * 检查唤端是否成功
+	   *
+	   * @param {string} schemeURL 唤端成功的地址
+	   * @param {function} callback 回调函数
+	   */
+
+
 	  _createClass(CallApp, [{
 	    key: 'checkOpen',
-	    value: function checkOpen$$1(callback) {
+	    value: function checkOpen$$1(schemeURL, callback) {
 	      var _this = this;
 
 	      var browser = this.browser,
 	          options = this.options;
 
 	      return checkOpen(function () {
+	        callback(schemeURL);
+	      }, function () {
 	        var scheme = _this.getScheme();
+	        var realUrl = null;
 
 	        // 调起地址为非scheme直接跳转
 	        if (/^(http|https)/i.test(scheme)) {
-	          evokeByLocation(scheme);
+	          realUrl = scheme;
 	        } else if (browser.isIos) {
 	          // 跳转到下载地址
 	          // 近期ios版本qq禁止了scheme和universalLink唤起app，安卓不受影响 - 18年12月23日
 	          // ios qq浏览器禁止了scheme和universalLink - 2019年5月1日
 	          // if (browser.isWechat || browser.isQQ || browser.isQQBrowser) {
 	          if (browser.isWechat || browser.isQQ) {
-	            evokeByLocation(options.tencentUrl);
+	            realUrl = options.tencentUrl;
 	          } else {
-	            evokeByLocation(options.iOSUrl);
+	            realUrl = options.iOSUrl;
 	          }
 	        } else if (browser.isWechat || browser.isQQ) {
 	          // Android
-	          evokeByLocation(options.tencentUrl);
+	          realUrl = options.tencentUrl;
 	        } else {
-	          evokeByLocation(options.androidUrl);
+	          realUrl = options.androidUrl;
 	        }
-	        callback();
+
+	        callback(realUrl);
+
+	        if (realUrl) {
+	          evokeByLocation(realUrl);
+	        }
 	      }, this.options.timeout);
 	    }
 
@@ -726,7 +752,7 @@
 	          evokeByIFrame(schemeURL);
 	        }
 
-	        this.checkOpen(callback);
+	        this.checkOpen(schemeURL, callback);
 	      }
 	      return this;
 	    }

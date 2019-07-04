@@ -82,26 +82,36 @@ export function evokeByTagA(uri) {
 
 /**
  * 检测是否唤端成功
- * @param {function} cb - 唤端失败回调函数
+ * @param {function} success - 唤端成功回调函数
+ * @param {function} fail - 唤端失败回调函数
+ * @param {number} timeout - 延时时间。单位：毫秒
  */
-export function checkOpen(cb, timeout) {
+export function checkOpen(success, fail, timeout) {
   const visibilityChangeProperty = getVisibilityChangeProperty();
+  let isFail = false;
   const timer = setTimeout(() => {
-    const hidden = isPageHidden();
-    if (!hidden) {
-      cb();
+    const isHidden = isPageHidden();
+    if (!isHidden) {
+      isFail = true;
+      fail();
     }
   }, timeout);
 
-  if (visibilityChangeProperty) {
-    document.addEventListener(visibilityChangeProperty, () => {
+  function pagehideCallback() {
+    const isHidden = isPageHidden();
+    if (!isFail) {
+      isFail = false;
       clearTimeout(timer);
-    });
+      if (isHidden) {
+        success();
+      }
+    }
+  }
 
+  if (visibilityChangeProperty) {
+    document.addEventListener(visibilityChangeProperty, pagehideCallback);
     return;
   }
 
-  window.addEventListener('pagehide', () => {
-    clearTimeout(timer);
-  });
+  window.addEventListener('pagehide', pagehideCallback);
 }

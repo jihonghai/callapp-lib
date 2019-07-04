@@ -11,44 +11,58 @@ import {
 
 class CallApp {
   /**
-   *Creates an instance of CallApp.
+   * Creates an instance of CallApp.
    * @param {object=} options - 配置项
    * @memberof CallApp
    */
   constructor(options) {
     const defaultOptions = {
-      timeout: 2000,
+      timeout: 5000,
       callback: () => {},
     };
     this.options = Object.assign(defaultOptions, options);
     this.browser = getBrowser();
   }
 
-  checkOpen(callback) {
+  /**
+   * 检查唤端是否成功
+   *
+   * @param {string} schemeURL 唤端成功的地址
+   * @param {function} callback 回调函数
+   */
+  checkOpen(schemeURL, callback) {
     const { browser, options } = this;
     return checkOpen(() => {
+      callback(schemeURL);
+    }, () => {
       const scheme = this.getScheme();
+      let realUrl = null;
 
       // 调起地址为非scheme直接跳转
       if (/^(http|https)/i.test(scheme)) {
-        evokeByLocation(scheme);
+        realUrl = scheme;
       } else if (browser.isIos) {
         // 跳转到下载地址
         // 近期ios版本qq禁止了scheme和universalLink唤起app，安卓不受影响 - 18年12月23日
         // ios qq浏览器禁止了scheme和universalLink - 2019年5月1日
         // if (browser.isWechat || browser.isQQ || browser.isQQBrowser) {
         if (browser.isWechat || browser.isQQ) {
-          evokeByLocation(options.tencentUrl);
+          realUrl = options.tencentUrl;
         } else {
-          evokeByLocation(options.iOSUrl);
+          realUrl = options.iOSUrl;
         }
       } else if (browser.isWechat || browser.isQQ) {
         // Android
-        evokeByLocation(options.tencentUrl);
+        realUrl = options.tencentUrl;
       } else {
-        evokeByLocation(options.androidUrl);
+        realUrl = options.androidUrl;
       }
-      callback();
+
+      callback(realUrl);
+
+      if (realUrl) {
+        evokeByLocation(realUrl);
+      }
     }, this.options.timeout);
   }
 
@@ -126,7 +140,7 @@ class CallApp {
         evokeByIFrame(schemeURL);
       }
 
-      this.checkOpen(callback);
+      this.checkOpen(schemeURL, callback);
     }
     return this;
   }
