@@ -118,6 +118,7 @@ class CallApp {
 
     // 存在超链接，直接进行跳转
     if (link) {
+      callback(link, 'link');
       evokeByLocation(link);
     } else if (this.isCallingApp()) {
       const schemeURL = this.getScheme();
