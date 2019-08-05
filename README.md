@@ -84,7 +84,10 @@ APP 的应用宝地址，例：`https://sj.qq.com/myapp/detail.htm?apkName=cmccw
 类型: `function`
 必填: ❎
 
-自定义唤端失败回调函数。传递 `callback` 不会覆盖 *callapp-lib* 库中默认的唤端失败处理逻辑。
+回调函数。最多2个参数。第一个参数为实际起作用的url。
+直接跳转超链接时，第一个参数为超链接，第二个参数为固定值 `link`。
+导流时，导流成功，第一个参数为 scheme地址；导流失败，第一个参数为 apk下载地址或AppStore应用地址或应用宝地址。
+传递 `callback` 不会覆盖 *callapp-lib* 库中默认的唤端失败处理逻辑。
 
 ## Method 方法
 
